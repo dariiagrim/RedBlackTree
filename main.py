@@ -1,3 +1,5 @@
+import random
+
 class Node:
     def __init__(self, value, parent, color="R"):
         self.value = value
@@ -38,9 +40,9 @@ class RBT:
     root = None
 
     def __init__(self):
-        self.width = 20
-        self.height = 10
-        self.grid = [["  " for _ in range(self.width)] for _ in range(self.height)]
+        self.width = 0
+        self.height = 0
+        self.grid = None
 
     def __insert(self, value, node):
         if node is None:
@@ -63,7 +65,7 @@ class RBT:
         self.__insert(value, self.root)
 
     def fix_violations(self, node: None):
-        while node.parent.color != "B" and node.parent.parent is not None and node.color == "R":
+        while node.parent is not None and node.parent.color != "B" and node.parent.parent is not None and node.color == "R":
             g = node.parent.parent
             p = node.parent
             u = node.get_uncle()
@@ -92,6 +94,46 @@ class RBT:
                     self.left_rotation(g)
                     self.recolor(g)
                     self.recolor(node)
+
+    def recolor(self, node: Node):
+        if node.color == "B" and node != self.root:
+            node.color = "R"
+        else:
+            node.color = "B"
+
+    def right_rotation(self, node: Node):
+        temp = node.left
+        node.left = temp.right
+        if node.left is not None:
+            node.left.parent = node
+        if node.parent is not None:
+            if node.parent.right == node:
+                node.parent.right = temp
+            else:
+                node.parent.left = temp
+            temp.parent = node.parent
+        else:
+            self.root = temp
+            temp.parent = None
+        temp.right = node
+        node.parent = temp
+
+    def left_rotation(self, node: Node):
+        temp = node.right
+        node.right = temp.left
+        if node.right is not None:
+            node.right.parent = node
+        if node.parent is not None:
+            if node.parent.right == node:
+                node.parent.right = temp
+            else:
+                node.parent.left = temp
+            temp.parent = node.parent
+        else:
+            self.root = temp
+            temp.parent = None
+        temp.left = node
+        node.parent = temp
 
     def __search(self, value, node):
         if node is None:
@@ -186,40 +228,6 @@ class RBT:
                 node.parent.right = None
             return
 
-    def get_position_in_tree(self, node):
-        x, y = (0, 0)
-        if node == self.root:
-            x, y = (self.width/2, 0)
-        else:
-            if node == node.parent.left:
-                x, y = (self.get_position_in_tree(node.parent)[0]-2, self.get_position_in_tree(node.parent)[1]+1)
-            else:
-                x, y = (self.get_position_in_tree(node.parent)[0] + 2, self.get_position_in_tree(node.parent)[1] + 1)
-        return int(x), int(y)
-
-    def print_grid(self):
-        for dot in self.grid:
-            print(*dot)
-        self.traversal(self.root)
-
-        for dot in self.grid:
-            print(*dot)
-
-    def traversal(self, node):
-        if node is None:
-            return
-        x, y = self.get_position_in_tree(node)
-        self.grid[y][x] = node.value
-        self.traversal(node.left)
-        self.traversal(node.right)
-
-
-
-
-
-
-
-
     @staticmethod
     def get_min_node(node):
         current = node
@@ -234,48 +242,53 @@ class RBT:
             current = current.right
         return current
 
+    def print_grid(self):
+        self.width = int(2 ** (self.find_apr_depth() - 1)*4)
+        self.height = int(self.find_apr_depth()+1)
+        self.grid = [["    " for _ in range(self.width)] for _ in range(self.height)]
+        self.traversal(self.root)
+        for dot in self.grid:
+            print(*dot)
 
-
-
-    def recolor(self, node: Node):
-        if node.color == "B" and node != self.root:
-            node.color = "R"
+    def get_position_in_tree(self, node):
+        x, y = (0, 0)
+        if node == self.root:
+            x, y = (self.width/2, 0)
         else:
-            node.color = "B"
-
-    def right_rotation(self, node: Node):
-        temp = node.left
-        node.left = temp.right
-        if node.left is not None:
-            node.left.parent = node
-        if node.parent is not None:
-            if node.parent.right == node:
-                node.parent.right = temp
+            if node == node.parent.left:
+                x, y = (self.get_position_in_tree(node.parent)[0] - self.find_apr_depth()+1-y, self.get_position_in_tree(node.parent)[1]+1)
             else:
-                node.parent.left = temp
-            temp.parent = node.parent
-        else:
-            self.root = temp
-            temp.parent = None
-        temp.right = node
-        node.parent = temp
+                x, y = (self.get_position_in_tree(node.parent)[0] + self.find_apr_depth()+1-y, self.get_position_in_tree(node.parent)[1] + 1)
+        return int(x), int(y)
 
-    def left_rotation(self, node: Node):
-        temp = node.right
-        node.right = temp.left
-        if node.right is not None:
-            node.right.parent = node
-        if node.parent is not None:
-            if node.parent.right == node:
-                node.parent.right = temp
-            else:
-                node.parent.left = temp
-            temp.parent = node.parent
+    def find_apr_depth(self):
+        node = self.root
+        depth = 1
+        while node.left is not None:
+            node = node.left
+            if node.color == "B":
+                depth += 1
+        depth *= 2
+        return depth
+
+    def traversal(self, node):
+        if node is None:
+            return
+        x, y = self.get_position_in_tree(node)
+        if node == self.root:
+            parent = None
         else:
-            self.root = temp
-            temp.parent = None
-        temp.left = node
-        node.parent = temp
+            parent = node.parent.value
+        if self.grid[y][x] == "    ":
+            self.grid[y][x] = f"{node.value}({node.color})"
+        else:
+            if node == node.parent.left:
+                self.grid[y][x + 1] = f"{node.value}({node.color})"
+            else:
+                self.grid[y][x - 1] = f"{node.value}({node.color})"
+
+        self.traversal(node.left)
+        self.traversal(node.right)
 
     def __print(self, node):
         if node is None:
@@ -288,14 +301,17 @@ class RBT:
         self.__print(self.root)
 
 
-
-
 tree = RBT()
-a = [5, 6, 8, 4, 3, 9, 15]
-for i in a:
-    tree.insert(i)
-print(tree.root)
+a = []
+for i in range(30):
+    num = random.randint(1, 30)
+    a.append(num)
+    tree.insert(num)
+    #print(tree.root)
 tree.print_grid()
+print(tree.find_apr_depth())
+print(tree.width, tree.height)
+print(a)
 
 
 
