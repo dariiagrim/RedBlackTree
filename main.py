@@ -2,8 +2,9 @@ import random
 
 
 class Node:
-    def __init__(self, value, parent, color="R"):
+    def __init__(self, value, parent, data1, color="R"):
         self.value = value
+        self.data = data1
         self.parent = parent
         self.left = None
         self.right = None
@@ -29,7 +30,7 @@ class Node:
         parent = None
         if self.parent is not None:
             parent = self.parent.value
-        string = f"{self.value}<-({parent})({self.color}) \n"
+        string = f"{self.value}<-({parent})({self.color}){self.data}\n"
         if self.left is not None:
             string += f"L:{self.left}"
         if self.right is not None:
@@ -40,25 +41,25 @@ class Node:
 class RBT:
     root = None
 
-    def __insert(self, value, node):
+    def __insert(self, value, node, data1):
         if node is None:
-            self.root = Node(value, None, "B")
+            self.root = Node(value, None, data1)
             return
         if node.value > value:
             if node.left is None:
-                node.left = Node(value, node)
+                node.left = Node(value, node, data1)
                 self.fix_violations(node.left)
             else:
-                self.__insert(value, node.left)
+                self.__insert(value, node.left, data1)
         else:
             if node.right is None:
-                node.right = Node(value, node)
+                node.right = Node(value, node, data1)
                 self.fix_violations(node.right)
             else:
-                self.__insert(value, node.right)
+                self.__insert(value, node.right, data1)
 
-    def insert(self, value):
-        self.__insert(value, self.root)
+    def insert(self, value, data1):
+        self.__insert(value, self.root, data1)
 
     def fix_violations(self, node: None):
         while node.parent is not None and node.parent.color != "B" and node.parent.parent is not None and node.color == "R":
@@ -271,6 +272,19 @@ class RBT:
             current = current.right
         return current
 
+    def search_data(self, value):
+        node = self.search(value)
+        if node is not None:
+            return node.data
+        return None
+
+    def change_data(self, value):
+        node = self.search(value)
+        if node is not None:
+            node.data = input()
+            return
+        return "Key doesn't exist"
+
     def __print(self, node):
         if node is None:
             return
@@ -284,15 +298,38 @@ class RBT:
 
 tree = RBT()
 a = []
-for _ in range(10000):
-    num = random.randint(1, 10000)
-    a.append(num)
-    tree.insert(num)
-print(tree.root)
-for _ in range(5000):
-    tree.delete(random.randint(1, 10000))
+# for _ in range(10000):
+#     num = random.randint(1, 10000)
+#     a.append(num)
+#     tree.insert(num)
+# print(tree.root)
+# for _ in range(5000):
+#     tree.delete(random.randint(1, 10000))
 
+with open("data.txt", "r") as f:
+    data_list = f.readlines()
+
+
+set_keys = set()
+for _ in range(15):
+    num = random.randint(1, 15)
+    if num not in set_keys:
+        set_keys.add(num)
+        num2 = random.randint(0, 9999)
+        data = data_list[num2]
+        tree.insert(num, data)
+
+print(tree.search_data(10))
 print(tree.root)
+print(tree.search_data(30))
+tree.insert(30, data_list[random.randint(0, 9999)])
+print(tree.root)
+print(tree.search(30))
+tree.change_data(30)
+print(tree.root)
+
+
+
 
 
 
