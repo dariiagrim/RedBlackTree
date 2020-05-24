@@ -37,13 +37,28 @@ class Node:
             string += f"R:{self.right}"
         return string
 
+    def __str__(self):
+        parent = None
+        if self.parent is not None:
+            parent = self.parent.value
+        return f"{self.value}, <-{parent}, {self.color}, {self.data}"
+
+    @staticmethod
+    def node_traversal(node, a):
+        if node is None:
+            return
+        else:
+            a.append(str(node))
+            Node.node_traversal(node.left, a)
+            Node.node_traversal(node.right, a)
+
 
 class RBT:
     root = None
 
     def __insert(self, value, node, data1):
         if node is None:
-            self.root = Node(value, None, data1)
+            self.root = Node(value, None, data1, color="B")
             return
         if node.value > value:
             if node.left is None:
@@ -151,6 +166,9 @@ class RBT:
         if node is None:
             return
         if node.left is None and node.right is None:
+            if node == self.root:
+                self.root = None
+                return
             self.fix_delete(node)
             return
 
@@ -159,12 +177,18 @@ class RBT:
             temp = node.value
             node.value = minn.value
             minn.value = temp
+            temp = node.data
+            node.data = minn.data
+            minn.data = temp
             self.__delete(minn)
         else:
             maxn = self.get_max_node(node.left)
             temp = node.value
             node.value = maxn.value
             maxn.value = temp
+            temp = node.data
+            node.data = maxn.data
+            maxn.data = temp
             self.__delete(maxn)
 
     def delete(self, value):
@@ -278,12 +302,12 @@ class RBT:
             return node.data
         return None
 
-    def change_data(self, value):
+    def change_data(self, value, data):
         node = self.search(value)
         if node is not None:
-            node.data = input()
-            return
-        return "Key doesn't exist"
+            node.data = data
+            return True
+        return False
 
     def __print(self, node):
         if node is None:
@@ -306,27 +330,27 @@ a = []
 # for _ in range(5000):
 #     tree.delete(random.randint(1, 10000))
 
-with open("data.txt", "r") as f:
-    data_list = f.readlines()
+# with open("data.txt", "r") as f:
+#     data_list = f.readlines()
+#
+#
+# set_keys = set()
+# for _ in range(15):
+#     num = random.randint(1, 15)
+#     if num not in set_keys:
+#         set_keys.add(num)
+#         num2 = random.randint(0, 9999)
+#         data = data_list[num2]
+#         tree.insert(num, data)
 
-
-set_keys = set()
-for _ in range(15):
-    num = random.randint(1, 15)
-    if num not in set_keys:
-        set_keys.add(num)
-        num2 = random.randint(0, 9999)
-        data = data_list[num2]
-        tree.insert(num, data)
-
-print(tree.search_data(10))
-print(tree.root)
-print(tree.search_data(30))
-tree.insert(30, data_list[random.randint(0, 9999)])
-print(tree.root)
-print(tree.search(30))
-tree.change_data(30)
-print(tree.root)
+# print(tree.search_data(10))
+# print(tree.root)
+# print(tree.search_data(30))
+# tree.insert(30, data_list[random.randint(0, 9999)])
+# print(tree.root)
+# print(tree.search(30))
+#  tree.change_data(30)
+# print(tree.root)
 
 
 
