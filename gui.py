@@ -19,7 +19,7 @@ def fill_randomly(*args):
         data_list = f.readlines()
 
     set_keys = set()
-    for _ in range(100):
+    for _ in range(20):
         num = random.randint(1, 100)
         if num not in set_keys:
             set_keys.add(num)
@@ -75,6 +75,7 @@ def insert(*args):
     v = value.get()
     global tree
     tree.insert(k, v)
+    tree_list.delete(0, END)
     change_list()
 
 def find(*args):

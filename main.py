@@ -55,6 +55,7 @@ class Node:
 
 class RBT:
     root = None
+    comparisons = 0
 
     def __insert(self, value, node, data1):
         if node is None:
@@ -151,16 +152,24 @@ class RBT:
 
     def __search(self, value, node):
         if node is None:
+            self.comparisons += 1
             return
         if node.value == value:
+            self.comparisons += 1
             return node
         if node.value > value:
+            self.comparisons += 1
             return self.__search(value, node.left)
         else:
             return self.__search(value, node.right)
 
     def search(self, value):
         return self.__search(value, self.root)
+
+    def num_of_comparisons(self):
+        comp = self.comparisons
+        self.comparisons = 0
+        return comp
 
     def __delete(self, node):
         if node is None:
@@ -299,7 +308,7 @@ class RBT:
     def search_data(self, value):
         node = self.search(value)
         if node is not None:
-            return node.data
+            return node.data.rstrip()
         return None
 
     def change_data(self, value, data):
@@ -320,37 +329,27 @@ class RBT:
         self.__print(self.root)
 
 
-tree = RBT()
-a = []
-# for _ in range(10000):
-#     num = random.randint(1, 10000)
-#     a.append(num)
-#     tree.insert(num)
-# print(tree.root)
-# for _ in range(5000):
-#     tree.delete(random.randint(1, 10000))
-
+# tree = RBT()
+#
+#
 # with open("data.txt", "r") as f:
 #     data_list = f.readlines()
 #
-#
-# set_keys = set()
+# set_keys1 = set()
+# for _ in range(10000):
+#     num1 = random.randint(1, 10000)
+#     if num1 not in set_keys1:
+#         set_keys1.add(num1)
+#         num11 = random.randint(0, 9999)
+#         data = data_list[num11]
+#         tree.insert(num1, data)
 # for _ in range(15):
-#     num = random.randint(1, 15)
-#     if num not in set_keys:
-#         set_keys.add(num)
-#         num2 = random.randint(0, 9999)
-#         data = data_list[num2]
-#         tree.insert(num, data)
+#     num = random.randint(1, 10000)
+#     print(tree.search_data(num))
+#     print(tree.num_of_comparisons())
 
-# print(tree.search_data(10))
-# print(tree.root)
-# print(tree.search_data(30))
-# tree.insert(30, data_list[random.randint(0, 9999)])
-# print(tree.root)
-# print(tree.search(30))
-#  tree.change_data(30)
-# print(tree.root)
+
+
 
 
 
