@@ -1,5 +1,6 @@
 import random
 
+
 class Node:
     def __init__(self, value, parent, color="R"):
         self.value = value
@@ -10,7 +11,7 @@ class Node:
 
     def get_uncle(self):
         if self.parent is not None and self.parent.parent is not None:
-            if self.parent.value < self.parent.parent.value:
+            if self.parent == self.parent.parent.left:
                 return self.parent.parent.right
             else:
                 return self.parent.parent.left
@@ -18,10 +19,10 @@ class Node:
 
     def get_sibling(self):
         if self.parent is not None:
-            if self.parent.value > self.value:
-                return self.parent.right
-            else:
+            if self.parent.right == self:
                 return self.parent.left
+            else:
+                return self.parent.right
         return None
 
     def __repr__(self):
@@ -38,11 +39,6 @@ class Node:
 
 class RBT:
     root = None
-
-    def __init__(self):
-        self.width = 0
-        self.height = 0
-        self.grid = None
 
     def __insert(self, value, node):
         if node is None:
@@ -96,6 +92,8 @@ class RBT:
                     self.recolor(node)
 
     def recolor(self, node: Node):
+        if node is None:
+            return
         if node.color == "B" and node != self.root:
             node.color = "R"
         else:
@@ -149,6 +147,8 @@ class RBT:
         return self.__search(value, self.root)
 
     def __delete(self, node):
+        if node is None:
+            return
         if node.left is None and node.right is None:
             self.fix_delete(node)
             return
@@ -171,6 +171,7 @@ class RBT:
         self.__delete(node)
 
     def fix_delete(self, node):
+        count = 0
         while True:
             if node.color == "R":
                 if node == node.parent.left:
@@ -182,51 +183,79 @@ class RBT:
                 p = node.parent
                 s = node.get_sibling()
                 if node == self.root:
-                    break
+                    return
                 if s is None or s.color == "B":
-                    if s.left.color == "B" and s.right.color == "B":
+                    if self.delete_check_bbb(s):
                         if p.color == "B":
                             self.recolor(s)
-                            node = node.parent
+                            if count == 0:
+                                if node == node.parent.left:
+                                    count += 1
+                                    node.parent.left = None
+                                else:
+                                    count += 1
+                                    node.parent.right = None
+                            node = p
                         else:
                             self.recolor(p)
                             self.recolor(s)
+                            break
                     elif node == node.parent.left:
-                        if s.left.color == "R" and s.right.color == "B":
+                        if (s.right is None or s.right.color == "B") and s.left.color == "R":
                             self.recolor(s)
                             self.recolor(s.left)
-                            self.right_rotation(node)
+                            self.right_rotation(s)
                         else:
                             if s.parent.color != s.color:
                                 temp = s.color
                                 s.color = s.parent.color
                                 s.parent.color = temp
-                                self.left_rotation(p)
-                                s.right.color = "B"
+                            s.right.color = "B"
+                            self.left_rotation(p)
+                            break
                     else:
-                        if s.right.color == "R" and s.left.color == "B":
+                        if (s.left is None or s.left.color == "B") and s.right.color == "R":
                             self.recolor(s)
                             self.recolor(s.right)
-                            self.left_rotation(node)
+                            self.left_rotation(s)
                         else:
                             if s.parent.color != s.color:
                                 temp = s.color
                                 s.color = s.parent.color
                                 s.parent.color = temp
-                                self.right_rotation(p)
-                                s.left.color = "B"
+                            s.left.color = "B"
+                            self.right_rotation(p)
+                            break
                 else:
-                    self.recolor(p)
-                    self.recolor(s)
+                    # self.recolor(p)
+                    # self.recolor(s)
+                    if s.parent.color != s.color:
+                        temp = s.color
+                        s.color = s.parent.color
+                        s.parent.color = temp
                     if p.left == node:
                         self.left_rotation(p)
                     else:
                         self.right_rotation(p)
-            if node == node.parent.left:
-                node.parent.left = None
-            else:
-                node.parent.right = None
-            return
+        if node == node.parent.left:
+            node.parent.left = None
+        else:
+            node.parent.right = None
+        return
+
+    @staticmethod
+    def delete_check_bbb(s):
+        if s is None:
+            return True
+        if s.left is None and s.right is None:
+            return True
+        if s.right is None and s.left is not None and s.left.color == "B":
+            return True
+        if s.left is None and s.right is not None and s.right.color == "B":
+            return True
+        if s.left is not None and s.right is not None and s.left.color == "B" and s.right.color == "B":
+            return True
+        return False
 
     @staticmethod
     def get_min_node(node):
@@ -242,54 +271,6 @@ class RBT:
             current = current.right
         return current
 
-    def print_grid(self):
-        self.width = int(2 ** (self.find_apr_depth() - 1)*4)
-        self.height = int(self.find_apr_depth()+1)
-        self.grid = [["    " for _ in range(self.width)] for _ in range(self.height)]
-        self.traversal(self.root)
-        for dot in self.grid:
-            print(*dot)
-
-    def get_position_in_tree(self, node):
-        x, y = (0, 0)
-        if node == self.root:
-            x, y = (self.width/2, 0)
-        else:
-            if node == node.parent.left:
-                x, y = (self.get_position_in_tree(node.parent)[0] - self.find_apr_depth()+1-y, self.get_position_in_tree(node.parent)[1]+1)
-            else:
-                x, y = (self.get_position_in_tree(node.parent)[0] + self.find_apr_depth()+1-y, self.get_position_in_tree(node.parent)[1] + 1)
-        return int(x), int(y)
-
-    def find_apr_depth(self):
-        node = self.root
-        depth = 1
-        while node.left is not None:
-            node = node.left
-            if node.color == "B":
-                depth += 1
-        depth *= 2
-        return depth
-
-    def traversal(self, node):
-        if node is None:
-            return
-        x, y = self.get_position_in_tree(node)
-        if node == self.root:
-            parent = None
-        else:
-            parent = node.parent.value
-        if self.grid[y][x] == "    ":
-            self.grid[y][x] = f"{node.value}({node.color})"
-        else:
-            if node == node.parent.left:
-                self.grid[y][x + 1] = f"{node.value}({node.color})"
-            else:
-                self.grid[y][x - 1] = f"{node.value}({node.color})"
-
-        self.traversal(node.left)
-        self.traversal(node.right)
-
     def __print(self, node):
         if node is None:
             return
@@ -303,15 +284,18 @@ class RBT:
 
 tree = RBT()
 a = []
-for i in range(30):
-    num = random.randint(1, 30)
+for _ in range(10000):
+    num = random.randint(1, 10000)
     a.append(num)
     tree.insert(num)
-    #print(tree.root)
-tree.print_grid()
-print(tree.find_apr_depth())
-print(tree.width, tree.height)
-print(a)
+print(tree.root)
+for _ in range(5000):
+    tree.delete(random.randint(1, 10000))
+
+print(tree.root)
+
+
+
 
 
 
